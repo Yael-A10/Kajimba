@@ -3,6 +3,10 @@ import machine
 from lcd_api import LcdApi
 from pico_i2c_lcd import I2cLcd
 
+#variables
+ml = 285
+session_fill_count = 0
+
 #led built into the raspberry pi pico used as power indicator
 onLED = machine.Pin(25, machine.Pin.OUT)
 timer = machine.Timer()
@@ -13,7 +17,14 @@ I2C_ADDR     = 0x27
 I2C_NUM_ROWS = 4
 I2C_NUM_COLS = 20
 i2c = machine.I2C(0, sda=machine.Pin(0), scl=machine.Pin(1), freq=400000)
-lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
+
+#test if diplay is connected
+try:
+    lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
+    displayConnected = True
+except OSError:
+    print('Display is not connected')
+    displayConnected = False
 
 button = machine.Pin(10, machine.Pin.IN, machine.Pin.PULL_DOWN)
 log = open("logs.txt", "r")
@@ -23,7 +34,7 @@ log.close()
 #flow meter and pump pairs
 flow_meter = machine.Pin(8, machine.Pin.IN, machine.Pin.PULL_UP)
 mosfet = machine.PWM(machine.Pin(19))
-mosfet.freq(1000)
+mosfet.freq(100000)
 
 pumpGroups = {"mosfet": [mosfet], "flowSensor": [flow_meter], "count": [0], "state":[False], "done": [True]}
 
@@ -37,22 +48,25 @@ def counter(fm, counter, state):
     return counter, state
 
 def writeToScreen(str1, str2):
-    lcd.clear()
-    lcd.move_to(0,0)
-    lcd.putstr(str1)
-    lcd.move_to(0,1)
-    lcd.putstr(str2)
+    if displayConnected:
+        if str1 != "":
+            lcd.move_to(0,0)
+            lcd.putstr(str1)
+        if str2 != "":
+            lcd.move_to(0,1)
+            lcd.putstr(str2)
 
-def runPumps():
+def runPumps(start):
     for group in range(0,len(pumpGroups["mosfet"])):
         pumpGroups["mosfet"][group].duty_u16(int(65000))
-    writeToScreen("Clearing...", "")
+    writeToScreen("Clearing...", "Run time:       ")
     time.sleep(1)
     while button.value() == 0:
-        pass
+        writeToScreen("", "Run time: {}".format(time.time()-(start+3)) + "s")
     for group in range(0,len(pumpGroups["mosfet"])):
         pumpGroups["mosfet"][group].duty_u16(int(0))
     display()
+    time.sleep(1)
 
 def resetPumpValues():
     for group in range(0,len(pumpGroups["mosfet"])):
@@ -75,8 +89,9 @@ def checkIfDone():
                     pumpGroups["mosfet"][group].duty_u16(int(0))
                     pumpGroups["done"][group] = False
                     done += 1
-                    lcd.move_to(8,1)
-                    lcd.putstr(str(done))
+                    if displayConnected:
+                        lcd.move_to(8,1)
+                        lcd.putstr(str(done))
                     session_fill_count+=1
                     total_fill_count+=1
                 pumpGroups["state"][group] = result[1]
@@ -87,46 +102,32 @@ def writeToLog():
     log.close()
 
 def display():
-    writeToScreen("Filled: " + str(session_fill_count),"Total: " + str(total_fill_count))
-    
-ml = 300
-session_fill_count = 0
-display()
+    writeToScreen("Filled: " + str(session_fill_count) + "             ","Total: " + str(total_fill_count) + "             " )
+
+def main():
+    if button.value() == 1:
+        start = time.time()
+        writeToScreen("Hold 3 s to     ", "Start clearing  ")
+        while button.value() == 1 and time.time()-start < 3:
+            time.sleep(0.1)
+            writeToScreen("Hold {} s to".format(3-(time.time()-start)), "")
+        if time.time()-start >= 3:
+            runPumps(start)
+        else:
+            writeToScreen("Filling...      ", "Filled: 0/" + str(len(pumpGroups["mosfet"])) + "             ")
+            resetPumpValues()
+            checkIfDone()
+            writeToLog()
+            time.sleep(1)
+            display()
 
 try:
+    display()
     while True:
-        if button.value() == 1:
-            start = time.time()
-            writeToScreen("Hold 3 s to", "Start clearing")
-            while button.value() == 1 and time.time()-start < 3:
-                pass
-            if time.time()-start >= 3:
-                runPumps()
-            else:
-                writeToScreen("Filling...", "Filled: 0/" + str(len(pumpGroups["mosfet"])))
-                resetPumpValues()
-                checkIfDone()
-                writeToLog()
-                time.sleep(1)
-                display()
+        main()
 except KeyboardInterrupt:
     for group in range(0,len(pumpGroups["mosfet"])):
-        pumpGroups["mosfet"][group].value(0)
-    lcd.clear()
+        pumpGroups["mosfet"][group].duty_u16(int(0))
+    if displayConnected:
+        lcd.clear()
     log.close()
-
-"""
-led.freq(1000)# Set the frequency value
-led_value = 0#LED brightness initial value
-led_speed = 5# Change brightness in increments of 5
-
-while True:
-    led_value += led_speed
-    led.duty_u16(int(led_value * 500))# Set the duty cycle, between 0-65535
-    time.sleep(0.1)
-    if led_value >= 100:
-        led_value = 100
-        led_speed = -5
-    elif led_value <= 0:
-        led_value = 0
-        led_speed = 5"""
