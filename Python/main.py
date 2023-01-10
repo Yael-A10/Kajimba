@@ -3,6 +3,11 @@ import machine
 from lcd_api import LcdApi
 from pico_i2c_lcd import I2cLcd
 
+#led built into the raspberry pi pico used as power indicator
+onLED = machine.Pin(25, machine.Pin.OUT)
+timer = machine.Timer()
+onLED.on() 
+
 #setup
 I2C_ADDR     = 0x27
 I2C_NUM_ROWS = 4
@@ -10,23 +15,17 @@ I2C_NUM_COLS = 20
 i2c = machine.I2C(0, sda=machine.Pin(0), scl=machine.Pin(1), freq=400000)
 lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
 
-button = machine.Pin(18, machine.Pin.IN, machine.Pin.PULL_DOWN)
+button = machine.Pin(10, machine.Pin.IN, machine.Pin.PULL_DOWN)
 log = open("logs.txt", "r")
 total_fill_count = int(log.read())
 log.close()
 
 #flow meter and pump pairs
-flow_meter = machine.Pin(17, machine.Pin.IN, machine.Pin.PULL_UP)
-relay = machine.Pin(16, machine.Pin.OUT)
+flow_meter = machine.Pin(8, machine.Pin.IN, machine.Pin.PULL_UP)
+mosfet = machine.PWM(machine.Pin(19))
+mosfet.freq(1000)
 
-#groups = [[relay, flow_meter, 0, False, True]]
-pumpGroups = {"relay": [relay], "flowSensor": [flow_meter], "count": [0], "state":[False], "done": [True]}
-
-"""count = 0
-def countPulse(pin):
-    global count
-    count += 1
-flow_meter.irq(trigger = machine.Pin.IRQ_RISING, handler = countPulse)"""
+pumpGroups = {"mosfet": [mosfet], "flowSensor": [flow_meter], "count": [0], "state":[False], "done": [True]}
 
 def counter(fm, counter, state):
     if not fm.value() and state:
@@ -45,19 +44,19 @@ def writeToScreen(str1, str2):
     lcd.putstr(str2)
 
 def runPumps():
-    for group in range(0,len(pumpGroups["relay"])):
-        pumpGroups["relay"][group].value(1)
+    for group in range(0,len(pumpGroups["mosfet"])):
+        pumpGroups["mosfet"][group].duty_u16(int(65000))
     writeToScreen("Clearing...", "")
     time.sleep(1)
     while button.value() == 0:
         pass
-    for group in range(0,len(pumpGroups["relay"])):
-        pumpGroups["relay"][group].value(0)
+    for group in range(0,len(pumpGroups["mosfet"])):
+        pumpGroups["mosfet"][group].duty_u16(int(0))
     display()
 
 def resetPumpValues():
-    for group in range(0,len(pumpGroups["relay"])):
-        pumpGroups["relay"][group].value(1)
+    for group in range(0,len(pumpGroups["mosfet"])):
+        pumpGroups["mosfet"][group].duty_u16(int(65000))
         pumpGroups["count"][group] = 0
         pumpGroups["state"][group] = False
         pumpGroups["done"][group] = True
@@ -66,13 +65,14 @@ def checkIfDone():
     global session_fill_count
     global total_fill_count
     done = 0
-    while done<len(pumpGroups["relay"]):
-        for group in range(0,len(pumpGroups["relay"])):
+    while done<len(pumpGroups["mosfet"]):
+        for group in range(0,len(pumpGroups["mosfet"])):
             if pumpGroups["done"][group]:
                 result = counter(pumpGroups["flowSensor"][group], pumpGroups["count"][group], pumpGroups["state"][group])
                 pumpGroups["count"][group] = result[0]
+                pumpGroups["mosfet"][group].duty_u16(int(65000-25000*((result[0]/4)/ml))) #slow down the pump as the bottle fills
                 if result[0]/4 >= ml:
-                    pumpGroups["relay"][group].value(0)
+                    pumpGroups["mosfet"][group].duty_u16(int(0))
                     pumpGroups["done"][group] = False
                     done += 1
                     lcd.move_to(8,1)
@@ -103,14 +103,30 @@ try:
             if time.time()-start >= 3:
                 runPumps()
             else:
-                writeToScreen("Filling...", "Filled: 0/" + str(len(pumpGroups["relay"])))
+                writeToScreen("Filling...", "Filled: 0/" + str(len(pumpGroups["mosfet"])))
                 resetPumpValues()
                 checkIfDone()
                 writeToLog()
                 time.sleep(1)
                 display()
 except KeyboardInterrupt:
-    for group in range(0,len(pumpGroups["relay"])):
-        pumpGroups["relay"][group].value(0)
+    for group in range(0,len(pumpGroups["mosfet"])):
+        pumpGroups["mosfet"][group].value(0)
     lcd.clear()
     log.close()
+
+"""
+led.freq(1000)# Set the frequency value
+led_value = 0#LED brightness initial value
+led_speed = 5# Change brightness in increments of 5
+
+while True:
+    led_value += led_speed
+    led.duty_u16(int(led_value * 500))# Set the duty cycle, between 0-65535
+    time.sleep(0.1)
+    if led_value >= 100:
+        led_value = 100
+        led_speed = -5
+    elif led_value <= 0:
+        led_value = 0
+        led_speed = 5"""
