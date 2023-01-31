@@ -30,4 +30,4 @@ fp-info-cache
 
 #mac
 .DS_store
-./KiCad/Kajimba/Kajimba-backups
+Kajimba-backups/
