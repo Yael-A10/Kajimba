@@ -31,3 +31,5 @@ fp-info-cache
 #mac
 .DS_store
 Kajimba-backups/
+.picowgo
+.vscode
