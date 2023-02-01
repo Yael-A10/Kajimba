@@ -733,7 +733,7 @@
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
     )
-    (model "/../KiCad-RP-Pico-main/KiCad-RP-Pico-main/RP-Pico Libraries/Pico.wrl"
+    (model "/../Pico.wrl"
       (offset (xyz 0 0 9.5))
       (scale (xyz 1 1 1))
       (rotate (xyz 0 0 0))
@@ -1522,7 +1522,7 @@
   (zone (net 0) (net_name "") (layer "F.Cu") (tstamp 331ff73d-9aff-47b0-8624-16374e0e6727) (hatch edge 0.508)
     (connect_pads (clearance 0))
     (min_thickness 0.254)
-    (keepout (tracks not_allowed) (vias allowed) (pads allowed) (copperpour not_allowed) (footprints allowed))
+    (keepout (tracks not_allowed) (vias allowed) (pads allowed ) (copperpour not_allowed) (footprints allowed))
     (fill (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
@@ -13759,7 +13759,7 @@
   (zone (net 0) (net_name "") (layer "F.Cu") (tstamp 96c36667-8cf3-43ce-b055-7f1c2ce25c6b) (hatch edge 0.508)
     (connect_pads (clearance 0))
     (min_thickness 0.254)
-    (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed) (copperpour not_allowed) (footprints allowed))
+    (keepout (tracks not_allowed) (vias not_allowed) (pads not_allowed ) (copperpour not_allowed) (footprints allowed))
     (fill (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
