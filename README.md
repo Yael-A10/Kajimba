@@ -63,3 +63,6 @@ The total amount of times a bottle was filled is stored on `logs.txt`, you can e
 ## KiCad Files
 
 ---
+
+![Unpopulated PCB Image](https://github.com/Yael-A10/Kajimba/tree/main/Images/unpopulatedPCB.png)
+![Populated PCB Image](https://github.com/Yael-A10/Kajimba/tree/main/Images/populatedPCB.png)
