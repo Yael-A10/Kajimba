@@ -23,6 +23,7 @@ pair1 = pumpSensorPairs(mosfet1, flowSensor1)
 
 #add the pairs into the pair list
 pairList = [pair1]
+
 for pair in pairList:
     pair.pumpOff()
 

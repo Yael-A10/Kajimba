@@ -37,7 +37,7 @@ class pumpSensorPairs:
         return "This pump is on pin {} and has a flow sensor on pin {}.".format(self.mosfetPin, self.flowSensorPin)
 
 def runPumps(start: int):
-    """Function that runs the pumps for an indefinite amount of time and dispays the run time on the screen"""
+    """Function that runs the pump(s) for an indefinite amount of time and dispays the run time on the screen"""
     from main import pairList
     for pair in pairList:
         pair.pumpOn()
@@ -50,6 +50,7 @@ def runPumps(start: int):
     display()
 
 def counter(flowSensor: Pin, counter: int, state: bool) -> tuple[int, bool]:
+    """Function that manages the flow sensor(s) and counts the pulses"""
     if not flowSensor.value() and state:
         counter += 1
         state = False
@@ -79,7 +80,7 @@ def checkIfDone():
             if not pair.done:
                 result = counter(pair.flowSensor, pair.count, pair.state)
                 pair.count = result[0]
-                pair.mosfet.duty_u16(int(65000-25000*((result[0]/4)/ml))) #slow down the pump as the bottle fills
+                pair.mosfet.duty_u16(int(65000-25000*((result[0]/4)/ml))) #slow down the pump(s) as the bottle fills
                 if result[0]/4 >= ml:
                     pair.pumpOff()
                     pair.done = True
@@ -91,7 +92,7 @@ def checkIfDone():
                 pair.state = result[1]
 
 def resetValues() -> None:
-        """Switches the pump(s) off and resets the values of count, state and done"""
+        """Function that switches the pump(s) off and resets the values of count, state and done"""
         from main import pairList
         for pair in pairList:
             pair.pumpOff()
