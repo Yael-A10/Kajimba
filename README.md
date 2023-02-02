@@ -61,9 +61,11 @@ Total: ()
 
 The total amount of times a bottle was filled is stored on `logs.txt`, you can edit this value if you want to edit/reset the total amount of bottles filled.
 
-## KiCad Files
+## KiCad
 
 ---
 
+Here is the unpopulated **PCB**:
 ![Unpopulated PCB Image](/KiCad/Images/unpopulatedPCB.png)
+Here is the populated **PCB**:
 ![Populated PCB Image](/KiCad/Images/populatedPCB.png)
