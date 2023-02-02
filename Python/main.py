@@ -2,7 +2,7 @@ import time
 import machine
 from lcdManager import writeToScreen, display, clearDisplay
 from pumpManager import pumpSensorPairs, runPumps, checkIfDone, resetValues, logClose
-from buttonManager import releaseButton, button
+from buttonManager import releaseButton, button, holdButton
 from testManager import runTest
 
 #setup
@@ -27,15 +27,10 @@ pairList = [pair1]
 for pair in pairList:
     pair.pumpOff()
 
-def main():
+def main() -> None:
     """Main fucntion that loops indefinately"""
     if button.value() == 1:
-        start = time.time()
-        while button.value() == 1 and time.time()-start < 3:
-            time.sleep(0.1)
-            writeToScreen("Hold {} s to".format(3-(time.time()-start)), "start clearing")
-        if time.time()-start >= 3:
-            releaseButton()
+        if holdButton(time.time(), "start clearing"):
             runPumps(time.time())
         else:
             writeToScreen("Filling...", "Filled: 0/" + str(len(pairList)))

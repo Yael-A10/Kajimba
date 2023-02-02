@@ -1,39 +1,34 @@
 import time
-from pumpManager import counter, resetValues
-from buttonManager import button, releaseButton
+from machine import Pin
+from pumpManager import resetValues
+from buttonManager import button, releaseButton, holdButton
 from lcdManager import writeToScreen, displayConnected
 
 def test(pairList: list) -> bool:
-    """Function that runs the pump(s) and stops when the flow sensor(s) has reached the desired ml amount"""
+    """Function that runs the pump(s) and stops when the flow sensor(s) has reached 10 ml"""
     done = 0
     start = time.time()
     writeToScreen("Testing...", "Tested: 0/" + str(len(pairList)))
     while done<len(pairList) and button.value() == 0 and time.time()-start < 10:
         for pair in pairList:
+            pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = pair.countPulse) #activate interrupt handler
+            pair.pumpOn()
             if not pair.done:
-                result = counter(pair.flowSensor, pair.count, pair.state)
-                pair.count = result[0]
-                pair.pumpOn()
-                if result[0]/4 >= 10: #checks if 10ml have been passed through the flow sensor(s)
+                if pair.count/4 >= 10: #checks if 10ml have been passed through the flow sensor(s)
                     pair.pumpOff()
                     pair.done = True
                     done += 1
                     writeToScreen("", "Tested {}/{}".format(str(done), len(pairList)))
-                pair.state = result[1]
+    for pair in pairList:
+        pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = None) # type: ignore #deactivate interrupt handler
     resetValues()
     return done>=len(pairList)
 
 def askForTest(start: int) -> bool:
-    while button.value() == 1 and time.time()-start < 3:
-        time.sleep(0.1)
-        writeToScreen("Hold {} s to".format(3-(time.time()-start)), "start testing")
-    if time.time()-start >= 3:
-        releaseButton()
-        return True
-    else:
-        return False
+    """Function that returns True if button was held and False if it wasn't"""
+    return holdButton(time.time(), "start testing")
 
-def runTest():
+def runTest() -> None:
     if displayConnected:
         passed = False
         from main import pairList

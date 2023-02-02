@@ -26,7 +26,7 @@ def addBlankSpace(string: str) -> str:
         string = string + " "*(16-stringLen)
         return string
 
-def writeToScreen(str1: str, str2:str):
+def writeToScreen(str1: str, str2:str) -> None:
     """Function that allows text to be written on the lcd screen"""
     if displayConnected:
         str1 = addBlankSpace(str1)
@@ -38,11 +38,11 @@ def writeToScreen(str1: str, str2:str):
             lcd.move_to(0,1)
             lcd.putstr(str2)
 
-def display():
+def display() -> None:
     from pumpManager import session_fill_count, total_fill_count
     writeToScreen("Filled: " + str(session_fill_count),"Total: " + str(total_fill_count))
 
-def clearDisplay():
+def clearDisplay() -> None:
     """Function that clears the lcd screen"""
     if displayConnected:
         lcd.clear()

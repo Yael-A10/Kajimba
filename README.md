@@ -47,9 +47,9 @@ If the display is not connected, it will skip this test and move on directly to 
 
 - To run the pump(s) you have two options:
     - To run the pump(s) indefinately hold down the button for 3 seconds. Press it again to stop.
-    - To run the pump(s) for the set amount of `ml`, press the button once. The pump will slow down incrementally as the bottle gets filled.
+    - To run the pump(s) for the set amount of `ml`, press the button once. The pump(s) will slow down incrementally as the bottle gets filled.
 
-    <span style="color: rgba(255, 255, 255, 0.5);">Note that you can press the button again at anytime to make the pump(s) stop running.</span>
+    > Note that you can press the button again at anytime to make the pump(s) stop running.
 
 When the display is connected, it will display the amount of times a bottle was filled during the session (top value) and the total amount of times a bottle was filled (bottom value):
 
