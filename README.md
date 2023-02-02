@@ -13,7 +13,8 @@
 
 1. In the `main.py` file, change/add `mosfet` and `flowSensor` pins depending on how many pump/flowSensor pairs you have. These are the default pins:
 
-    ```python
+    ```python![image](https://user-images.githubusercontent.com/112374055/216338277-969c9c25-4de8-40c9-8e30-9a85490654c8.png)
+
     #define the pump and flow sensor pins:
     mosfet1 = 19
     flowSensor1 = 8
@@ -64,5 +65,5 @@ The total amount of times a bottle was filled is stored on `logs.txt`, you can e
 
 ---
 
-![Unpopulated PCB Image](https://github.com/Yael-A10/Kajimba/tree/main/KiCad/Images/unpopulatedPCB.png)
-![Populated PCB Image](https://github.com/Yael-A10/Kajimba/tree/main/KiCad/Images/populatedPCB.png)
+![Unpopulated PCB Image](/KiCad/Images/unpopulatedPCB.png)
+![Populated PCB Image](/KiCad/Images/populatedPCB.png)
