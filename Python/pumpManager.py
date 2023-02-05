@@ -43,16 +43,26 @@ class pumpSensorPairs:
         """Returns the pump and flow sensor pins"""
         return "This pump is on pin {} and has a flow sensor on pin {}.".format(self.mosfetPin, self.flowSensorPin)
 
-def runPumps(start: int) -> None:
-    """Function that runs the pump(s) for an indefinite amount of time and dispays the run time on the screen"""
+def pumpsOn() -> None:
+    """Function that switches on the pumps with a 0.1 s time delay so that the power supply doesn't get overloaded"""
     from main import pairList
     for pair in pairList:
         pair.pumpOn()
+        time.sleep(0.1)
+
+def pumpsOff() -> None:
+    """Function that switches off the pumps"""
+    from main import pairList
+    for pair in pairList:
+        pair.pumpOff()
+
+def runPumps(start: int) -> None:
+    """Function that runs the pump(s) for an indefinite amount of time and dispays the run time on the screen"""
+    pumpsOn()
     writeToScreen("Clearing...", "Run time:")
     while button.value() == 0:
         writeToScreen("", "Run time: {}".format(time.time()-(start)) + "s")
-    for pair in pairList:
-        pair.pumpOff()
+    pumpsOff()
     releaseButton()
     display()
 
@@ -66,17 +76,27 @@ def logClose() -> None:
     """Function that closes logs.txt when stopping program incase that it is open"""
     log.close()
 
+def slowPumps(pair: pumpSensorPairs, percentFilled: int) -> None:
+    """Function that slows the pump(s) ater the bottle is 75% full"""
+    speed = int(65000-(25000*((percentFilled - 75)/25))) #slow down the pump(s) as the bottle fills
+    print(speed)
+    pair.mosfet.duty_u16(speed)
+
 def checkIfDone() -> None:
     """Function that runs the pump(s) and stops when the flow sensor(s) has reached the desired ml amount"""
+    from main import ml, pairList
     global session_fill_count
     global total_fill_count
-    from main import ml, pairList
     done = 0
+    pumpsOn()
     while done<len(pairList) and button.value() == 0:
         for pair in pairList:
             pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = pair.countPulse) #activate interrupt handler
             if not pair.done:
-                pair.mosfet.duty_u16(int(65000-25000*((pair.count/4)/ml))) #slow down the pump(s) as the bottle fills
+                percentFilled = round((pair.count/4/ml)*100)
+                if percentFilled > 75: #if the bottle is more than 75% filled, then it will start slowing down the pump(s)
+                    slowPumps(pair, percentFilled)
+                writeToScreen("Filling... " + str(percentFilled) + "%", "")
                 if pair.count/4 >= ml:
                     pair.pumpOff()
                     pair.done = True

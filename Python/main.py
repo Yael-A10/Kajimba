@@ -1,8 +1,8 @@
 import time
 import machine
 from lcdManager import writeToScreen, display, clearDisplay
-from pumpManager import pumpSensorPairs, runPumps, checkIfDone, resetValues, logClose
-from buttonManager import releaseButton, button, holdButton
+from pumpManager import pumpSensorPairs, runPumps, checkIfDone, resetValues, logClose, pumpsOff
+from buttonManager import button, holdButton
 from testManager import runTest
 
 #setup
@@ -24,8 +24,7 @@ pair1 = pumpSensorPairs(mosfet1, flowSensor1)
 #add the pairs into the pair list
 pairList = [pair1]
 
-for pair in pairList:
-    pair.pumpOff()
+pumpsOff()
 
 def main() -> None:
     """Main fucntion that loops indefinately"""
@@ -45,8 +44,7 @@ try:
     while True:
         main()
 except KeyboardInterrupt:
-    for pair in pairList:
-        pair.pumpOff()
+    pumpsOff()
     clearDisplay()
     onLED.off()
     logClose()
