@@ -1,6 +1,6 @@
 import time
 from machine import Pin
-from pumpManager import resetValues, pumpsOn
+from pumpManager import resetValues, pumpsOn, pumpsOff
 from buttonManager import button, holdButton
 from lcdManager import writeToScreen, displayConnected
 
@@ -9,19 +9,17 @@ def test(pairList: list) -> bool:
     done = 0
     start = time.time()
     writeToScreen("Testing...", "Tested: 0/" + str(len(pairList)))
+    resetValues()
     pumpsOn()
     while done<len(pairList) and button.value() == 0 and time.time()-start < 10:
         for pair in pairList:
-            pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = pair.countPulse) #activate interrupt handler
             if not pair.done:
                 if pair.count/4 >= 10: #checks if 10ml have been passed through the flow sensor(s)
                     pair.pumpOff()
                     pair.done = True
                     done += 1
                     writeToScreen("", "Tested {}/{}".format(str(done), len(pairList)))
-    for pair in pairList:
-        pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = None) # type: ignore #deactivate interrupt handler
-    resetValues()
+    pumpsOff()
     return done>=len(pairList)
 
 def askForTest(start: int) -> bool:

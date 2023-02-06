@@ -1,7 +1,7 @@
 from machine import I2C, Pin
 from pico_i2c_lcd import I2cLcd
 
-#setup
+#lcd screen setup
 I2C_ADDR     = 0x27
 I2C_NUM_ROWS = 2
 I2C_NUM_COLS = 16
@@ -16,7 +16,7 @@ except OSError:
     displayConnected = False
 
 def addBlankSpace(string: str) -> str:
-    """Function that adds spaces to a string being printed to the screen so that there is no overlap"""
+    """Function that adds spaces to a string being printed to the lcd screen so that there is no overlap"""
     if string == "":
         return string
     stringLen = len(string)
@@ -39,6 +39,7 @@ def writeToScreen(str1: str, str2:str) -> None:
             lcd.putstr(str2)
 
 def display() -> None:
+    """Function that displays the total and session fill counts to the lcd screen"""
     from pumpManager import session_fill_count, total_fill_count
     writeToScreen("Filled: " + str(session_fill_count),"Total: " + str(total_fill_count))
 

@@ -11,7 +11,6 @@ total_fill_count = int(log.read())
 log.close()
 
 class pumpSensorPairs:
-
     """Class that defines the pump and flow sensor pairs and manages them"""
 
     def __init__(self, mosfet: int, flowSensor: int, count: int = 0, done: bool = False) -> None:
@@ -22,6 +21,7 @@ class pumpSensorPairs:
         self.mosfetPin = mosfet
         #initialise flow sensor variables
         self.flowSensor = Pin(flowSensor, Pin.IN, Pin.PULL_UP)
+        self.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = self.countPulse) #interrupt handler
         self.flowSensorPin = flowSensor
         #initialise other variables
         self.count = count
@@ -44,11 +44,11 @@ class pumpSensorPairs:
         return "This pump is on pin {} and has a flow sensor on pin {}.".format(self.mosfetPin, self.flowSensorPin)
 
 def pumpsOn() -> None:
-    """Function that switches on the pumps with a 0.1 s time delay so that the power supply doesn't get overloaded"""
+    """Function that switches on the pumps with a 0.5 s time delay so that the power supply doesn't get overloaded"""
     from main import pairList
     for pair in pairList:
         pair.pumpOn()
-        time.sleep(0.1)
+        time.sleep(0.5)
 
 def pumpsOff() -> None:
     """Function that switches off the pumps"""
@@ -76,26 +76,25 @@ def logClose() -> None:
     """Function that closes logs.txt when stopping program incase that it is open"""
     log.close()
 
-def slowPumps(pair: pumpSensorPairs, percentFilled: int) -> None:
-    """Function that slows the pump(s) ater the bottle is 75% full"""
-    speed = int(65000-(25000*((percentFilled - 75)/25))) #slow down the pump(s) as the bottle fills
-    print(speed)
+def slowPumps(pair: pumpSensorPairs, percentFilled: int, percentToStartSlowing: int) -> None:
+    """Function that slows the pump(s) ater the bottle is (percentToStartSlowing)% full"""
+    speed = int(65000-(25000*((percentFilled - percentToStartSlowing)/(100-percentToStartSlowing)))) #slow down the pump(s) as the bottle fills
     pair.mosfet.duty_u16(speed)
 
 def checkIfDone() -> None:
     """Function that runs the pump(s) and stops when the flow sensor(s) has reached the desired ml amount"""
-    from main import ml, pairList
+    from main import ml, pairList, percentToStartSlowing
     global session_fill_count
     global total_fill_count
     done = 0
+    resetValues()
     pumpsOn()
     while done<len(pairList) and button.value() == 0:
         for pair in pairList:
-            pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = pair.countPulse) #activate interrupt handler
             if not pair.done:
                 percentFilled = round((pair.count/4/ml)*100)
-                if percentFilled > 75: #if the bottle is more than 75% filled, then it will start slowing down the pump(s)
-                    slowPumps(pair, percentFilled)
+                if percentFilled > percentToStartSlowing: #if the bottle is more than (percentToStartSlowing)% filled, then it will start slowing down the pump(s)
+                    slowPumps(pair, percentFilled, percentToStartSlowing)
                 writeToScreen("Filling... " + str(percentFilled) + "%", "")
                 if pair.count/4 >= ml:
                     pair.pumpOff()
@@ -105,13 +104,13 @@ def checkIfDone() -> None:
                     session_fill_count+=1
                     total_fill_count+=1
                     writeToLog()
-    for pair in pairList:
-        pair.flowSensor.irq(trigger = Pin.IRQ_RISING, handler = None) # type: ignore #deactivate interrupt handler
+    if done>=len(pairList):
+        time.sleep(1) #give user enough time to read the display if all the bottles were filled
+    pumpsOff()
 
 def resetValues() -> None:
         """Function that switches the pump(s) off and resets the values of count and done"""
         from main import pairList
         for pair in pairList:
-            pair.pumpOff()
             pair.count = 0
             pair.done = False

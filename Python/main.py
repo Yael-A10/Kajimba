@@ -9,6 +9,7 @@ from testManager import runTest
 
 #variables
 ml = 285
+percentToStartSlowing = 75 #variable set between 0 and 90 that controls when the pump(s) start slowing down
 
 #led built into the raspberry pi pico used as power indicator
 onLED = machine.Pin(25, machine.Pin.OUT)
@@ -34,8 +35,6 @@ def main() -> None:
         else:
             writeToScreen("Filling...", "Filled: 0/" + str(len(pairList)))
             checkIfDone()
-            resetValues()
-            time.sleep(1)
             display()
 
 try:

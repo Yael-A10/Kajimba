@@ -2,10 +2,11 @@ import time
 from machine import Pin
 from lcdManager import writeToScreen
 
+#button pin setup
 button = Pin(10, Pin.IN, Pin.PULL_DOWN)
 
 def releaseButton() -> None:
-    """Function that checks if the button has been released"""
+    """Function that makes sure user releases the button"""
     writeToScreen("Release the", "button")
     while button.value() == 1:
         pass
