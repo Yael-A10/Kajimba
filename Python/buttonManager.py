@@ -17,8 +17,7 @@ def holdButton(start: int, string: str) -> bool:
     while button.value() == 1 and time.time()-start < 3:
         time.sleep(0.1)
         writeToScreen("Hold {} s to".format(3-(time.time()-start)), string)
-    if time.time()-start >= 3:
-        releaseButton()
-        return True
-    else:
+    if not time.time()-start >= 3:
         return False
+    releaseButton()
+    return True

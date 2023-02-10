@@ -13,12 +13,14 @@ def test(pairList: list) -> bool:
     pumpsOn()
     while done<len(pairList) and button.value() == 0 and time.time()-start < 10:
         for pair in pairList:
-            if not pair.done:
-                if pair.count/4 >= 10: #checks if 10ml have been passed through the flow sensor(s)
-                    pair.pumpOff()
-                    pair.done = True
-                    done += 1
-                    writeToScreen("", "Tested {}/{}".format(str(done), len(pairList)))
+            if pair.done:
+                continue
+            if pair.count/4 >= 10: #checks if 10ml have been passed through the flow sensor(s)
+                pair.pumpOff()
+                pair.done = True
+                done += 1
+                writeToScreen("", "Tested {}/{}".format(str(done), len(pairList)))
+    
     pumpsOff()
     return done>=len(pairList)
 
@@ -34,12 +36,12 @@ def runTest() -> None:
             writeToScreen("Click btn = skip", "Hold 3 s = test")
             while button.value() == 0:
                 pass
-            if askForTest(time.time()):
-                if not test(pairList):
-                    writeToScreen("Please check", "pump/flow sensor")
-                    print("There might be a problem with the pump/flow sensor pairs, please ensure they are both connected and function correctly.")
-                    time.sleep(2)
-                else:
-                    passed = True
-            else:
+            if not askForTest(time.time()):
                 passed = True
+                continue
+            if test(pairList):
+                passed = True
+                continue
+            writeToScreen("Please check", "pump/flow sensor")
+            print("There might be a problem with the pump/flow sensor pairs, please ensure they are both connected and function correctly.")
+            time.sleep(2)

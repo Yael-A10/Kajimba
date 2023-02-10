@@ -20,11 +20,10 @@ def addBlankSpace(string: str) -> str:
     if string == "":
         return string
     stringLen = len(string)
-    if stringLen > 16:
-        return string
-    else:
+    if not stringLen > 16:
         string = string + " "*(16-stringLen)
         return string
+    return string
 
 def writeToScreen(str1: str, str2:str) -> None:
     """Function that allows text to be written on the lcd screen"""

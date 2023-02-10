@@ -8,7 +8,8 @@ from testManager import runTest
 #setup
 
 #variables
-ml = 285
+ml1 = 285
+ml2 = 300
 percentToStartSlowing = 75 #variable set between 0 and 90 that controls when the pump(s) start slowing down
 
 #led built into the raspberry pi pico used as power indicator
@@ -37,8 +38,18 @@ def main() -> None:
             checkIfDone()
             display()
 
+def chooseML(ml1: int, ml2: int) -> int:
+    """Function that allows the user to choose at the beginning of the session between ml1 and ml2"""
+    writeToScreen("Click = mL1:{}".format(ml1), "Hold = mL2:{}".format(ml2))
+    while button.value() == 0:
+        pass
+    if holdButton(time.time(), "select ml2:{}".format(ml2)):
+        return ml2
+    return ml1
+
 try:
     runTest()
+    ml = chooseML(ml1, ml2)
     display()
     while True:
         main()
